@@ -1,0 +1,27 @@
+{
+  "name": "maarek_bank",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon -e js,yaml index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "abort-controller": "^3.0.0",
+    "bcrypt": "^5.0.0",
+    "dotenv": "^8.2.0",
+    "exchange-rates-api": "^1.0.2",
+    "express": "^4.17.1",
+    "mongoose": "^5.10.11",
+    "node-fetch": "^2.6.1",
+    "node-jose": "^2.0.0",
+    "nodemon": "^2.0.6",
+    "swagger-ui-express": "^4.1.4",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "axios": "^0.21.0"
+  }
+}

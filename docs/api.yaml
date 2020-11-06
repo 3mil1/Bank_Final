@@ -1,0 +1,659 @@
+openapi: 3.0.2
+info:
+    title: Bank
+    version: 1.0.0
+    description: Markko Poljakov ja Emil Värnomasing BANK
+    contact:
+        name: Markko Poljakov ja Emil Värnomasing
+        email: markko.poljakov@khk.ee
+paths:
+    /api/account:
+        summary: Account information
+        description: Account information
+        get:
+            tags:
+                - Accounts
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/successfulResponse'
+                            examples:
+                                successfulResponse:
+                                    value:
+                                        name: Markko Poljakov ja Emil Värnomasing
+                                        username: Markko
+                                        account:
+                                            -
+                                                account_number: EE4353349039303124
+                                                balance: 50
+                                                currency: EUR
+                    description: Account information
+                '401':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                missingAuthorizationHeader:
+                                    value:
+                                        error: Missing Authorization header
+                                invalidHeaderFormat:
+                                    value:
+                                        error: Invalid Authorization header format
+                                invalidToken:
+                                    value: "\t{\"error\":\"Invalid token\"}"
+                                invalidMongooseToken:
+                                    value:
+                                        error: Invalid token
+                    description: |
+                        Missing token
+                '404':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                accountNotFound:
+                                    value:
+                                        error: Account not found
+                                userNotFound:
+                                    value:
+                                        error: User not found
+                    description: Not found
+                '500':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                oopsSomethingWentWrong:
+                                    value:
+                                        error: Oops! Something went wrong
+                    description: Server error
+            security:
+                -
+                    Bearer: []
+            summary: Account information
+            description: Account information
+    /api/transaction:
+        summary: Make a transaction
+        description: Make a transaction
+        get:
+            tags:
+                - Transactions
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/successfulResponse'
+                            examples:
+                                successfulTransactionHistory:
+                                    value:
+                                        transactions:
+                                            createdAt: '2020-11-03T17:23:04.056Z'
+                                            status: completed
+                                            _id: 5fa19248f1ff7c46a80eeb5d
+                                            userId: 5fa18d06e11be12268b48733
+                                            amount: 500
+                                            currency: EUR
+                                            accountFrom: f896138686071081018
+                                            accountTo: f896138686071081017
+                                            explanation: raha
+                                            senderName: Emil
+                                            __v: 0
+                                            receiverName: Markko
+                                            statusDetail: ''
+                    description: Successful transaction history
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                error:
+                                    value: "\t{\"error\":\"error\"}"
+                    description: Something happened
+                '404':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                noLoggedTransactions:
+                                    value:
+                                        error: You have no logged transactions
+                    description: You have no logged transactions
+            security:
+                -
+                    Bearer: []
+            summary: Get User transaction history
+            description: Get User transaction history
+        post:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/postTransactionRequest'
+                        examples:
+                            createTransaction:
+                                value:
+                                    accountFrom: 7da3851546037313642
+                                    accountTo: 7da3851546037313641
+                                    explanation: võlg
+                                    amount: 50
+                required: true
+            tags:
+                - Transactions
+            responses:
+                '201':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/successfulTransaction'
+                            examples:
+                                transactionSuccessful:
+                                    value:
+                                        message: Transaction created successfully
+                    description: Transaction created
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                invalidAmount:
+                                    value:
+                                        error: Invalid amount
+                                invalidAccountTo:
+                                    value:
+                                        error: Invalid accountTo
+                    description: Invalid amount
+                '401':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                missingAuthorizationHeader:
+                                    value:
+                                        error: Missing Authorization header
+                    description: Missing token
+                '402':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                insufficentFunds:
+                                    value:
+                                        error: Insufficient funds
+                    description: Insufficent funds
+            security:
+                -
+                    Bearer: []
+            summary: Make a transaction
+            description: Transactions API
+    /api/transaction/b2b:
+        post:
+            tags:
+                - Transactions
+            responses:
+                '200':
+                    description: Succesfully received transaction
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                parsingJwtFailed:
+                                    value:
+                                        error: Parsing JWT payload failed
+                                verifyAccountTo:
+                                    value:
+                                        error: Account not found
+                                bankNotFound:
+                                    value:
+                                        error: >-
+                                            The account sending the funds does not belong to a bank registered
+                                            in Central Bank
+                                cannotVerifyJwksSignature:
+                                    value:
+                                        error: 'Cannot verify your signature: The jwksUrl of your bank is invalid'
+                                invalidSignature:
+                                    value:
+                                        error: Invalid signature
+                    description: Returns the errors specified
+                '500':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                centralBankError:
+                                    value:
+                                        error: Central Bank error
+                                missingJwksUrl:
+                                    value:
+                                        error: 'Cannot verify your signature: The jwksUrl of your bank is missing'
+                    description: Returns the errors specified
+    /api/transaction/jwks:
+        get:
+            tags:
+                - Transactions
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/keys'
+                            examples:
+                                keys:
+                                    value:
+                                        keys:
+                                            -
+                                                kty: RSA
+                                                kid: h_s_zbvPAS1WB-ref6FF1_TIHANcpjPhV_xEk9WR6X4
+                                                'n': >-
+                                                    jdcp_0ewRa-dKQuqzSQD6nNsP8G-bfHcgl7fBshGCgznFYmGTiV2OuRQ1yIogdlfSBiQrol1P-IlfN1m5NKsR3iLw-PDOKFzoLf1fTQpuEZUsm5Ip-LpYgjCjjw8oOP7ZFqlkuR3XMj1rZYKiyhoRITxUZlz0v1LO1Wa736lO1E
+                                                e: AQAB
+                    description: Keys
+    /api/user/register:
+        description: ''
+        post:
+            requestBody:
+                description: User created
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/postUsersRequest'
+                required: true
+            tags:
+                - Users
+            responses:
+                '201':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/postUsersRequest'
+                            examples:
+                                userCreated:
+                                    value:
+                                        message: User saved
+                    description: User saved
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                userAlreadyExists:
+                                    value: '{error: "All fields must be filled"}'
+                                passwordLenght:
+                                    value:
+                                        error: Password length must be 8 or more characters
+                    description: All fields must be filled
+                '409':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                usernameAlreadyExists:
+                                    value: '{error: "Username already exists"}'
+                    description: Username already exists
+                '500':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                oopsSomethingWentWrong:
+                                    value:
+                                        error: Oops! Something went wrong
+                    description: Oops! Something went wrong
+            summary: Register a new user
+            description: Register a new user
+    /api/session:
+        post:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/postSessionRequest'
+                required: true
+            tags:
+                - Sessions
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/postSessionResponse'
+                            examples:
+                                tokenHasBeenCreated:
+                                    value:
+                                        token: 5f9db108b8c28c40a42d94c4
+                    description: ''
+                '400':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/postSessionResponse'
+                            examples:
+                                userAndPwRequired:
+                                    value:
+                                        error: Username and password required
+                                invalidUsernameOrPassword:
+                                    value:
+                                        error: Invalid username or password
+                    description: Invalid username or password
+                '500':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/postSessionResponse'
+                            examples:
+                                oopsSomethingWentWrong:
+                                    value:
+                                        error: Oops! Something went wrong
+                    description: Oops! Something went wrong
+            summary: Create session token
+            description: Create session token
+        delete:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/json'
+                required: true
+            tags:
+                - Sessions
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/postSessionResponse'
+                            examples:
+                                deleteToken:
+                                    value:
+                                        message: Token successfully deleted
+                    description: Deleted token
+                '401':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                "missingAuthorizationHeader\t":
+                                    value: "\t{\"error\":\"Missing Authorization header\"}"
+                                invalidHeaderFormat:
+                                    value: "\t{\"error\":\"Invalid Authorization header format\"}"
+                                invalidToken:
+                                    value: "\t{\"error\":\"Invalid token\"}"
+                                invalidMongooseToken:
+                                    value:
+                                        error: Invalid token
+                    description: Missing token
+                '404':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                sessionNotFound:
+                                    value:
+                                        error: Session not found
+                    description: Token not found
+                '500':
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/errorResponse'
+                            examples:
+                                oopsSomethingWentWrong:
+                                    value: "\t{\"error\":\"Oops! Something went wrong\"}"
+                    description: Server error
+            security:
+                -
+                    Bearer: []
+            summary: Delete session token
+            description: Delete session token
+components:
+    schemas:
+        postUsersRequest:
+            description: ''
+            required:
+                - name
+                - password
+                - username
+            type: object
+            properties:
+                name:
+                    description: Full name
+                    type: string
+                password:
+                    description: Minimum 8 characters
+                    type: string
+                username:
+                    description: ''
+                    type: string
+            example:
+                name: random text
+                password: random text
+                username: random text
+        errorResponse:
+            title: Error response
+            description: Generic error response
+            required:
+                - missingAuthorizationHeader
+                - error
+                - invalidHeaderFormat
+                - invalidToken
+                - invalidMongooseToken
+                - insufficentFunds
+                - invalidAmount
+                - invalidAccountTo
+                - cannotTransferToYourself
+                - noLoggedTransactions
+            type: object
+            properties:
+                error:
+                    description: Error response
+                    type: string
+                missingAuthorizationHeader:
+                    description: '{"error":"Missing Authorization header"}'
+                    type: string
+                invalidHeaderFormat:
+                    description: "\t{\"error\":\"Invalid Authorization header format\"}"
+                    type: string
+                invalidToken:
+                    description: '{"error":"Invalid token"}'
+                    type: string
+                invalidMongooseToken:
+                    description: '{"error":"Invalid token"}'
+                    type: string
+                insufficentFunds:
+                    description: '{ "error": ''Insufficient funds'' }'
+                    type: string
+                invalidAmount:
+                    description: '{ "error": ''Invalid amount'' }'
+                    type: string
+                invalidAccountTo:
+                    description: '{ "error": ''Invalid accountTo'' }'
+                    type: string
+                cannotTransferToYourself:
+                    description: '{"error": "You cannot transfer to yourself"}'
+                    type: string
+                noLoggedTransactions:
+                    description: '{ "error": "You have no logged transactions" }'
+                    type: string
+            example:
+                error: error message
+        postSessionResponse:
+            description: ''
+            type: object
+            example:
+                token: 5f6db108b8c28c40a43d94c4
+        postSessionRequest:
+            description: ''
+            required:
+                - username
+                - password
+            type: object
+            properties:
+                username:
+                    description: ''
+                    type: string
+                password:
+                    description: ''
+                    type: string
+            example:
+                username: random text
+                password: random text
+        deleteSessionRequest:
+            description: ''
+            type: object
+            example: {}
+        deleteSessionResponse:
+            description: ''
+            type: object
+            example:
+                message: Token successfully deleted
+        successfulResponse:
+            description: ''
+            required:
+                - successful
+                - successfulHistory
+            type: object
+            properties:
+                successful:
+                    description: Successful response
+                    type: string
+                successfulHistory:
+                    description: "{\r\n    \"transactions\": {\r\n        \"createdAt\": \"2020-11-03T17:23:04.056Z\",\r\n        \"status\": \"completed\",\r\n        \"_id\": \"5fa19248f1ff7c46a80eeb5d\",\r\n        \"userId\": \"5fa18d06e11be12268b48733\",\r\n        \"amount\": 500,\r\n        \"currency\": \"EUR\",\r\n        \"accountFrom\": \"f896138686071081018\",\r\n        \"accountTo\": \"f896138686071081017\",\r\n        \"explanation\": \"raha\",\r\n        \"senderName\": \"maarek\",\r\n        \"__v\": 0,\r\n        \"receiverName\": \"maarek1\",\r\n        \"statusDetail\": \"\"\r\n    }\r\n}"
+                    type: string
+            example:
+                name: Markko Poljakov ja Emil Värnomasing
+                username: Markko
+                account:
+                    -
+                        account_number: EE2650749058303131
+                        balance: 50
+                        currency: EUR
+        postTransactionRequest:
+            description: ''
+            required:
+                - accountTo
+                - amount
+                - explanation
+                - accountFrom
+            type: object
+            properties:
+                accountTo:
+                    description: Reciever
+                    type: string
+                explanation:
+                    description: Transaction explanation
+                    type: string
+                amount:
+                    description: Fund amount
+                    type: integer
+                accountFrom:
+                    description: Sender
+                    type: string
+            example:
+                accountFrom: 7da3851546037313642
+                accountTo: 7da3851546037313641
+                explanation: võlg
+                amount: 50
+        successfulTransaction:
+            title: Root Type for successfulTransaction
+            description: ''
+            type: object
+            properties:
+                message:
+                    description: Success message
+                    type: string
+            example:
+                message: Transaction created successfully
+        parsingJwtFailed:
+            description: ''
+            type: object
+            example:
+                error: Parsing JWT payload failed
+        verifyAccountTo:
+            title: Root Type for verifyAccountTo
+            description: ''
+            type: object
+            properties:
+                error:
+                    type: string
+            example:
+                error: Account not found
+        bankNotFound:
+            title: Root Type for bankNotFound
+            description: ''
+            type: object
+            properties:
+                error:
+                    type: string
+            example:
+                error: The account sending the funds does not belong to a bank registered in Central Bank
+        cannotVerifyJwksSignature:
+            title: Root Type for cannotVerifyJwksSignature
+            description: ''
+            type: object
+            properties:
+                error:
+                    type: string
+            example:
+                error: 'Cannot verify your signature: The jwksUrl of your bank is invalid'
+        invalidSignature:
+            title: Root Type for invalidSignature
+            description: ''
+            type: object
+            properties:
+                error:
+                    type: string
+            example:
+                error: Invalid signature
+        keys:
+            title: Root Type for keys
+            description: ''
+            type: object
+            properties:
+                keys:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            kty:
+                                type: string
+                            kid:
+                                type: string
+                            'n':
+                                type: string
+                            e:
+                                type: string
+            example:
+                keys:
+                    -
+                        kty: RSA
+                        kid: h_s_zbvPAS1WB-ref6FF1_TIHANcpjPhV_xEk9WR6X4
+                        'n': >-
+                            jdcp_0ewRa-dKQuqzSQD6nNsP8G-bfHcgl7fBshGCgznFYmGTiV2OuRQ1yIogdlfSBiQrol1P-IlfN1m5NKsR3iLw-PDOKFzoLf1fTQpuEZUsm5Ip-LpYgjCjjw8oOP7ZFqlkuR3XMj1rZYKiyhoRITxUZlz0v1LO1Wa736lO1E
+                        e: AQAB
+        json:
+            title: Root Type for json
+            description: '{}'
+            type: object
+            example: {}
+    securitySchemes:
+        Bearer:
+            scheme: bearer
+            type: http
